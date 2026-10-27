@@ -1,0 +1,1938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Fragments of Us: one memory, retold every time someone adds to it.">
+<meta name="referrer" content="no-referrer">
+<title>Fragments of Us</title>
+<style>
+:root {
+  --paper: #f3f0e8;
+  --ink: #1d1b17;
+  --muted: #7a756a;
+  --line: #d9d3c5;
+  --accent: #8a4b2a;
+  --field: #fbfaf6;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15140f;
+    --ink: #e9e4d8;
+    --muted: #8f897c;
+    --line: #33302a;
+    --accent: #d39a74;
+    --field: #1c1b16;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+    --paper: #15140f;
+    --ink: #e9e4d8;
+    --muted: #8f897c;
+    --line: #33302a;
+    --accent: #d39a74;
+    --field: #1c1b16;
+    color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-block: 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.top nav { display: flex; gap: 20px; }
+a { color: inherit; text-underline-offset: 3px; }
+
+main { max-width: 760px; margin: 0 auto; padding-block: 0 80px; }
+
+.memory { margin: 6vh 0 40px; }
+#canvas-holder { width: 100%; min-height: 200px; }
+#canvas-holder canvas { display: block; }
+
+.plain {
+  display: none;
+  font-size: 22px;
+  line-height: 1.6;
+  text-align: center;
+  margin: 0;
+}
+body.plain-mode .plain { display: block; }
+body.plain-mode #canvas-holder { display: none; }
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.contribute { max-width: 560px; margin: 0 auto; }
+
+textarea, input[type="text"] {
+  width: 100%;
+  font: inherit;
+  font-size: 19px;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 14px 16px;
+  resize: none;
+}
+textarea:focus, input:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="text"] { font-family: var(--mono); font-size: 15px; }
+
+.row { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+.row:has(#chars) { justify-content: flex-end; margin-top: 6px; }
+
+button {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: var(--paper);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+button.ghost-btn { background: transparent; color: var(--ink); }
+button.link {
+  background: none; border: 0; padding: 0; color: inherit;
+  font: inherit; text-decoration: underline; text-underline-offset: 3px;
+}
+
+.notice {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 14.5px;
+  color: var(--muted);
+}
+.notice p { margin: 0 0 6px; color: var(--ink); }
+.notice ul { margin: 0 0 14px; padding-left: 18px; }
+.notice li { margin-bottom: 6px; }
+.consent { display: flex; gap: 10px; align-items: flex-start; color: var(--ink); cursor: pointer; }
+.consent input { margin-top: 5px; accent-color: var(--accent); }
+
+.status { font-family: var(--mono); font-size: 12.5px; color: var(--accent); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+.panel { border-top: 1px solid var(--line); padding-top: 18px; }
+.panel-title { margin: 0 0 8px; }
+.log { margin: 0 0 18px; padding-left: 18px; color: var(--muted); font-size: 15px; }
+.log em { color: var(--ink); font-style: normal; border-bottom: 1px solid var(--accent); }
+
+.token-box { background: var(--field); border: 1px solid var(--line); padding: 14px 16px; margin-bottom: 16px; }
+.token-box p { margin: 0 0 8px; font-size: 14.5px; }
+code {
+  display: block;
+  font-family: var(--mono);
+  font-size: 15px;
+  word-break: break-all;
+  padding: 8px 0;
+  user-select: all;
+}
+
+dialog {
+  width: min(560px, calc(100% - 32px));
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 24px;
+}
+dialog::backdrop { background: rgba(20, 18, 14, 0.45); }
+dialog h2 { font-weight: normal; margin: 0 0 8px; font-size: 22px; }
+dialog p { font-size: 15px; }
+.close-form { float: right; font-family: var(--mono); font-size: 12px; }
+#saved-tokens { margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+#saved-tokens button { margin: 4px 8px 0 0; padding: 4px 8px; font-size: 11px; }
+.diff { margin: 0 0 12px; font-size: 16px; }
+.diff.before { color: var(--muted); }
+.diff del { color: var(--accent); }
+
+.trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* prose pages */
+.prose { max-width: 640px; margin: 0 auto; }
+.prose h1 { font-weight: normal; font-size: 30px; margin: 30px 0 4px; }
+.prose h2 { font-weight: normal; font-size: 20px; margin: 30px 0 6px; }
+.prose li { margin-bottom: 6px; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 15px; }
+.prose td, .prose th { border-top: 1px solid var(--line); padding: 8px 6px; text-align: left; vertical-align: top; }
+
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .top { padding-block: 16px; }
+  .memory { margin-top: 3vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
+
+.proto {
+  margin: 8px auto 0;
+  max-width: 560px;
+  border: 1px dashed var(--line);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.proto p { margin: 0; }
+.proto strong { color: var(--ink); }
+.proto-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.proto-actions button { padding: 6px 12px; font-size: 12px; }
+.privacy-dialog { width: min(680px, calc(100% - 32px)); max-height: 85vh; overflow-y: auto; }
+.privacy-dialog .prose h1 { margin-top: 0; }
+.edition-note { border: 1px dashed var(--line); padding: 4px 14px 10px; margin: 10px 0 24px; }
+.top button.link { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); }
+
+</style>
+</head>
+<body>
+<header class="top">
+    <span class="mark">fragments of us</span>
+    <nav>
+      <button type="button" class="link" id="open-erase">erase my trace</button>
+      <button type="button" class="link" id="open-privacy">privacy</button>
+    </nav>
+  </header>
+
+  <main>
+<div class="proto" role="note">
+  <p><strong>Browser edition.</strong> This version of Fragments of Us runs entirely in your browser. The memory you see is yours alone: it is built from six example messages plus whatever you add, nothing you type is sent anywhere, and closing the page forgets everything.</p>
+  <div class="proto-actions">
+    <button type="button" class="ghost-btn" id="proto-reset">start from empty</button>
+    <button type="button" class="ghost-btn" id="proto-seed">restore examples</button>
+  </div>
+</div>
+    <section class="memory" aria-labelledby="memory-label">
+      <h1 id="memory-label" class="visually-hidden">The current memory</h1>
+      <div id="canvas-holder" aria-hidden="true"></div>
+      <p id="plain" class="plain" aria-live="polite"></p>
+      <div class="meta">
+        <span id="count">&nbsp;</span>
+        <button type="button" class="link" id="toggle-plain" aria-pressed="false">read plainly</button>
+      </div>
+    </section>
+
+    <section class="contribute" id="contribute">
+      <form id="form" novalidate>
+        <label for="message" class="visually-hidden">Your message</label>
+        <textarea id="message" name="message" maxlength="140" rows="2" placeholder="leave a few words…" required></textarea>
+        <div class="row">
+          <span id="chars" class="muted">0 / 140</span>
+        </div>
+
+        <!-- spam trap: hidden from people, tempting to bots -->
+        <div class="trap" aria-hidden="true">
+          <label>Website <input type="text" name="website" id="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+
+        <div class="notice">
+          <p><strong>Before you add to the memory</strong></p>
+          <ul>
+            <li>Your words become public, but never as you wrote them. The memory retells everything in its own words: your subject is paired with someone else's actions, "I" and "you" become "someone" and "they", everything moves into the past tense, and words are swapped for near-synonyms. Nobody, including you, can read your original message back out of it.</li>
+            <li>Over time the memory will also rearrange, combine, overwrite and eventually forget your words, alongside everyone else's.</li>
+            <li>Do not include names, places, contact details, or anything that could identify you or someone else. Messages that look like they do are turned away.</li>
+            <li>You will get a private deletion token, shown once. It is the only way to erase your words later. We store only a scrambled version of it.</li>
+            <li>Erasing removes your words and every stored result that depended on them, so the memory changes. It cannot remove screenshots or copies other people have already made.</li>
+            <li>There is no limit on how many messages you can add. The only things turned away are identifying details, abusive language, and an exact repeat of something already added today.</li>
+            <li>We keep no accounts, cookies or IP addresses, but anonymity is not absolute: your writing style or what you say can still point to you.</li>
+          </ul>
+          <label class="consent">
+            <input type="checkbox" id="consent">
+            <span>I understand my words will be shown publicly and transformed, and I've left out identifying information. (<button type="button" class="link" id="open-privacy-2">privacy policy</button>)</span>
+          </label>
+        </div>
+
+        <div class="row">
+          <button type="submit" id="submit" disabled>add to the memory</button>
+          <span id="form-status" class="status" role="status"></span>
+        </div>
+      </form>
+
+      <div id="result" class="panel" hidden>
+        <p class="panel-title">Your words entered the memory.</p>
+        <ul id="log" class="log"></ul>
+        <div class="token-box">
+          <p>Your deletion token. Save it now. It will not be shown again and cannot be recovered.</p>
+          <code id="token"></code>
+          <div class="row">
+            <button type="button" id="copy-token">copy</button>
+            <button type="button" id="keep-token" class="ghost-btn">keep on this device</button>
+          </div>
+          <p class="muted small">"Keep on this device" saves the token only in this browser's local storage, so this browser can erase your trace later. Anyone using this browser could too.</p>
+        </div>
+        <button type="button" class="link" id="again">add something else</button>
+      </div>
+    </section>
+
+    <dialog id="erase" aria-labelledby="erase-title">
+      <form method="dialog" class="close-form"><button class="link" aria-label="Close">close</button></form>
+      <h2 id="erase-title">Erase my trace</h2>
+      <p>Paste your deletion token. Your words are removed, every stored version that depended on them is cleared, and the memory is rebuilt without you. What it says afterwards may change in ways you did not expect.</p>
+      <form id="erase-form">
+        <label for="erase-token" class="visually-hidden">Deletion token</label>
+        <input id="erase-token" type="text" autocomplete="off" spellcheck="false" placeholder="your token">
+        <div id="saved-tokens"></div>
+        <div class="row">
+          <button type="submit">erase</button>
+          <span id="erase-status" class="status" role="status"></span>
+        </div>
+      </form>
+      <div id="erase-result" hidden>
+        <p class="muted small">before</p>
+        <p id="erase-before" class="diff before"></p>
+        <p class="muted small">after</p>
+        <p id="erase-after" class="diff"></p>
+      </div>
+    </dialog>
+  <dialog id="privacy" aria-labelledby="privacy-title" class="privacy-dialog">
+      <form method="dialog" class="close-form"><button class="link" aria-label="Close">close</button></form>
+      <div class="prose" id="privacy-title-wrap"><h1 id="privacy-title">Privacy and consent</h1><div class="edition-note"><h2>In this browser edition</h2><ul><li>Nothing you type leaves your device. There is no server, no database, no cookies and no analytics.</li><li>Your messages, the memory and your deletion tokens exist only in this open page and disappear when you close it, unless you choose "keep on this device", which saves a token in this browser's local storage.</li><li>The page loads one library, p5.js, from cdnjs.cloudflare.com. That service can see that your browser requested it, as with any website. The site itself is hosted on GitHub Pages, which may keep its own server logs.</li><li>Screenshots you or others take while words are on screen cannot be removed by erasing.</li></ul><p>The rest of this page describes the full, shared version of Fragments of Us, where messages from everyone build one memory.</p></div>
+    <h2>The shared version</h2>
+    <p class="muted">Last updated 27 October 2026</p>
+
+    <p>Fragments of Us is an art and research project about how digital systems, including AI systems with selective memory, keep, reshape and discard what people share with them. It holds one public text. Every message anyone adds changes that text, and every message someone erases changes it again. This page explains exactly what that means for your words and your data.</p>
+
+    <h2>What happens to your words</h2>
+    <ul>
+      <li><strong>They become public.</strong> Anyone who visits the site can see the memory, and your words become part of it.</li>
+      <li><strong>They are transformed.</strong> The memory is rebuilt from every surviving message, in order, using fixed rules that move whole phrases rather than single words, so it stays readable. A message that shares a word with a remembered sentence strengthens it; a new sentence may be joined to an old one with a small linking word ("while", "where", "until"); a new subject and verb may overwrite an old one, which lingers faintly as a "ghost"; two sentences may exchange subjects (verbs change to agree) or trade place phrases such as "in the rain"; and when the memory is full, the oldest, least-repeated phrases are forgotten first. Your words may end up attached to someone else's sentence, or disappear while your message is still stored.</li>
+      <li><strong>They are retold, never shown as written.</strong> Before anything appears on the site, the whole memory is retold: every subject is paired with another sentence's verb, place phrases move to other sentences, first- and second-person words ("I", "my", "you") become "someone", "they" and "their", everything is put in the past tense, and common words are replaced with near-synonyms ("sea" may become "tide"). A final check makes sure no run of four consecutive words from any message appears in the memory. The result stays readable, but your original message cannot be reconstructed from it. This reduces, but does not remove, the chance that someone recognises what you wrote: an unusual word with no synonym, or a very particular detail, can still show through.</li>
+      <li><strong>They are moderated.</strong> Before anything is stored, an automated check turns away messages that look like they contain contact details, links, handles, names introduced as names, addresses, ID numbers, slurs, sexual content or threats. Because combining words can create new strings, the output is checked too, and anything that trips the filter is masked (░░░). The person running the site may also remove messages by hand. Rejected messages are not stored.</li>
+    </ul>
+
+    <h2>Please do not share identifying information</h2>
+    <p>Leave out names (yours or anyone else's), places you can be found, contact details, health information, and anything you would not want strangers to read and remix. The automated check catches obvious cases, not all of them.</p>
+
+    <h2>What we collect, and what we don't</h2>
+    <table>
+      <tr><th>Stored</th><th>Why</th></tr>
+      <tr><td>The text of your message, after moderation</td><td>It is the material the memory is rebuilt from.</td></tr>
+      <tr><td>A one-way hash (SHA-256) of your deletion token</td><td>So your token can erase your message. We cannot recover the token from the hash, and we cannot tell you your token if you lose it.</td></tr>
+      <tr><td>The calendar day your message arrived (no time)</td><td>To apply the retention limit below.</td></tr>
+      <tr><td>Snapshots of the memory after each message</td><td>These are the "stored outputs": the transformed version you see after submitting. They contain words, not identities.</td></tr>
+    </table>
+    <p>We do <strong>not</strong> store IP addresses, browser or device details, cookies, accounts, email addresses, exact timestamps or analytics. The site loads no third-party scripts, fonts or trackers.</p>
+    <p><strong>There is no limit on how many messages you can add.</strong> The site does not count or slow down your submissions. To keep out automated spam it only turns away messages sent within a couple of seconds of the page loading, messages that fill in a field hidden from people (bots tend to), and exact copies of something already added that day. None of these checks store anything about you.</p>
+    <p>The one thing that is limited is <em>erase attempts</em>: about ten per ten minutes, so nobody can guess deletion tokens by trying thousands of them. For this, the server keeps a short-lived count in memory, keyed only by a salted hash of your IP address. The salt is random and replaced every 24 hours, and the count is never written to disk.</p>
+    <p>If you choose "keep on this device", your deletion token is saved in your own browser's local storage. It never leaves your browser except when you use it to erase. Anyone with access to that browser could use it.</p>
+
+    <h2>Erase my trace</h2>
+    <p>When you submit, you receive a private deletion token, shown once. Using it on the main page ("erase my trace"):</p>
+    <ul>
+      <li>permanently deletes your message and its token hash;</li>
+      <li>deletes the stored snapshot made from your message <em>and every later snapshot</em>, because each of those depended on yours;</li>
+      <li>rebuilds the memory from the remaining messages, so the public text changes, sometimes far beyond the words you contributed.</li>
+    </ul>
+    <p>Erasure is immediate on the live site. If the site operator keeps backups of the database, an erased message may remain in a backup until that backup expires (see below).</p>
+
+    <h2>What erasing cannot undo</h2>
+    <ul>
+      <li><strong>Screenshots and copies.</strong> Anyone can screenshot, copy or record the memory while your words are in it. We cannot find or remove those.</li>
+      <li><strong>Other people's memories of it.</strong> People who read it, read it.</li>
+      <li><strong>Lost tokens.</strong> Without your token we cannot identify which message was yours, and so cannot erase it for you. You can still ask the operator to remove a specific message by describing its wording.</li>
+    </ul>
+
+    <h2>Anonymity is not absolute</h2>
+    <p>We designed the site so that we do not know who you are. That is not the same as guaranteeing nobody could ever work it out. Your phrasing, a detail you mention, or the moment you posted (for example, if someone watched you do it) can point to you. Your internet provider, network administrator and the hosting provider that runs the server can see that you visited the site, as with any website, and the hosting provider may keep its own network logs under its own policy.</p>
+
+    <h2>How long things last</h2>
+    <p>Messages are automatically deleted after <span id="retention">90</span> days, and the memory is rebuilt without them. Forgetting is part of the work. Database backups, if the operator keeps any, should be kept for no longer than 30 days.</p>
+
+    <h2>Who can see what</h2>
+    <p>Visitors see the current memory only. The site never shows which message produced which word, except to the contributor, once, right after they submit. The original text of each message is kept on the server, because the memory is rebuilt from it; it is never shown on the site. The operator can see that stored text in order to moderate, but has no way to link it to people.</p>
+
+    <h2>Age</h2>
+    <p>This project is intended for people aged 16 and over.</p>
+
+    <h2>Your rights and contact</h2>
+    <p>Depending on where you live, you may have rights to access or delete data about you. Because we hold no information that identifies you, the deletion token is the main way to exercise them. For anything else, including asking for a message to be removed by its wording, contact the operator at <strong>[operator contact email]</strong>.</p>
+
+    <h2>Changes</h2>
+    <p>If these practices change, this page will be updated and the date at the top will change. Changes will not apply retroactively to make your data less private.</p>
+  </div>
+    </dialog>
+  </main>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<script>
+const __mods = {}, __cache = {};
+function require(name) {
+  const key = name.replace(/^\.\/(src\/)?/, '').replace(/\.js$/, '');
+  if (__cache[key]) return __cache[key].exports;
+  const module = { exports: {} };
+  __cache[key] = module;
+  __mods[key](module, module.exports, require);
+  return module.exports;
+}
+__mods['grammar'] = function (module, exports, require) {
+// A deliberately small, transparent grammar. It does not "understand"
+// English; it knows enough to cut a message into phrases that can be moved
+// without breaking the sentence, to find where the verb starts, and to fix
+// subject–verb agreement when a subject is swapped.
+
+// --- word classes ------------------------------------------------------------
+const PREPOSITIONS = new Set([
+  'in', 'on', 'at', 'over', 'under', 'through', 'into', 'onto', 'across', 'beside',
+  'between', 'behind', 'beyond', 'by', 'with', 'without', 'near', 'from', 'toward',
+  'towards', 'after', 'before', 'inside', 'outside', 'along', 'around', 'against',
+  'past', 'beneath', 'below', 'above', 'among', 'within', 'during', 'like', 'upon', 'for'
+]);
+const CONJUNCTIONS = new Set([
+  'and', 'but', 'or', 'while', 'when', 'where', 'because', 'as', 'until', 'so',
+  'though', 'although', 'if', 'yet', 'since', 'unless', 'once'
+]);
+const DETERMINERS = new Set([
+  'the', 'a', 'an', 'my', 'your', 'our', 'their', 'his', 'her', 'its', 'every',
+  'this', 'that', 'these', 'those', 'some', 'no', 'each', 'all', 'any', 'one',
+  'another', 'many', 'few', 'several', 'what', 'whose', 'which'
+]);
+const SUBJECT_PRONOUNS = {
+  i: 'first', we: 'plural', you: 'plural', they: 'plural',
+  he: 'single', she: 'single', it: 'single', nobody: 'single', everyone: 'single',
+  someone: 'single', nothing: 'single', everything: 'single', something: 'single',
+  everybody: 'single', somebody: 'single', anyone: 'single', this: 'single', that: 'single'
+};
+const IRREGULAR_PLURALS = new Set(['people', 'children', 'men', 'women', 'feet', 'teeth', 'mice', 'geese']);
+const STOPWORDS = new Set([
+  ...PREPOSITIONS, ...CONJUNCTIONS, ...DETERMINERS, ...Object.keys(SUBJECT_PRONOUNS),
+  'is', 'are', 'am', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+  'do', 'does', 'did', 'not', 'to', 'of', 'me', 'us', 'them', 'him', 'here', 'there',
+  'just', 'very', 'still', 'too', 'yet', 'then', 'now'
+]);
+
+const ADVERBS = new Set(['never', 'always', 'still', 'often', 'just', 'once', 'sometimes', 'also', 'rarely', 'barely', 'already', 'ever', 'only', 'even', 'really', 'finally', 'suddenly', 'quietly', 'slowly', 'softly', 'not']);
+
+// --- verbs -------------------------------------------------------------------
+const MODALS = new Set(['can', 'could', 'will', 'would', 'shall', 'should', 'may', 'might', 'must']);
+
+// present tense pairs that change with the subject
+const BE_PRESENT = { first: 'am', single: 'is', plural: 'are' };
+const BE_PAST = { first: 'was', single: 'was', plural: 'were' };
+
+const IRREGULAR = {
+  // base: [past, past participle]
+  be: ['was', 'been'], have: ['had', 'had'], do: ['did', 'done'], go: ['went', 'gone'],
+  come: ['came', 'come'], become: ['became', 'become'], leave: ['left', 'left'],
+  see: ['saw', 'seen'], find: ['found', 'found'], keep: ['kept', 'kept'], hold: ['held', 'held'],
+  know: ['knew', 'known'], grow: ['grew', 'grown'], fall: ['fell', 'fallen'],
+  forget: ['forgot', 'forgotten'], feel: ['felt', 'felt'], think: ['thought', 'thought'],
+  bring: ['brought', 'brought'], sleep: ['slept', 'slept'], speak: ['spoke', 'spoken'],
+  break: ['broke', 'broken'], take: ['took', 'taken'], give: ['gave', 'given'],
+  make: ['made', 'made'], say: ['said', 'said'], tell: ['told', 'told'], sing: ['sang', 'sung'],
+  swim: ['swam', 'swum'], run: ['ran', 'run'], sit: ['sat', 'sat'], stand: ['stood', 'stood'],
+  lose: ['lost', 'lost'], meet: ['met', 'met'], write: ['wrote', 'written'], drive: ['drove', 'driven'],
+  rise: ['rose', 'risen'], wake: ['woke', 'woken'], weep: ['wept', 'wept'], dream: ['dreamt', 'dreamt'],
+  burn: ['burnt', 'burnt'], fly: ['flew', 'flown'], draw: ['drew', 'drawn'], throw: ['threw', 'thrown'],
+  hear: ['heard', 'heard'], hide: ['hid', 'hidden'], begin: ['began', 'begun'], drink: ['drank', 'drunk'],
+  sink: ['sank', 'sunk'], shine: ['shone', 'shone'], hang: ['hung', 'hung'], dig: ['dug', 'dug'],
+  spin: ['spun', 'spun'], win: ['won', 'won'], sell: ['sold', 'sold'], build: ['built', 'built'],
+  send: ['sent', 'sent'], spend: ['spent', 'spent'], bend: ['bent', 'bent'], get: ['got', 'gotten'],
+  let: ['let', 'let'], put: ['put', 'put'], cut: ['cut', 'cut'], set: ['set', 'set'],
+  shut: ['shut', 'shut'], hit: ['hit', 'hit'], read: ['read', 'read'], spread: ['spread', 'spread'],
+  wear: ['wore', 'worn'], tear: ['tore', 'torn'], freeze: ['froze', 'frozen'], choose: ['chose', 'chosen'],
+  blow: ['blew', 'blown'], shake: ['shook', 'shaken'], steal: ['stole', 'stolen'], lie: ['lay', 'lain'],
+  lay: ['laid', 'laid'], pay: ['paid', 'paid'], catch: ['caught', 'caught'], teach: ['taught', 'taught'],
+  seek: ['sought', 'sought'], buy: ['bought', 'bought'], fight: ['fought', 'fought'], mean: ['meant', 'meant'],
+  eat: ['ate', 'eaten'], ring: ['rang', 'rung'], forgive: ['forgave', 'forgiven'], light: ['lit', 'lit'],
+  sweep: ['swept', 'swept'], bleed: ['bled', 'bled'], feed: ['fed', 'fed'], lead: ['led', 'led'],
+  slide: ['slid', 'slid'], strike: ['struck', 'struck'], swing: ['swung', 'swung'], wind: ['wound', 'wound'],
+  bear: ['bore', 'borne']
+};
+
+const REGULAR = `remember fold wait walk call open close listen look stay return change move turn
+carry play love miss want need hope wish learn live die cry laugh smile dance rain snow drift float
+flow glow shimmer echo fade vanish appear belong linger breathe touch follow wander rest start end
+stop try ask answer notice watch reach pull push hum whisper shout climb cross pass fill empty pour
+melt soften harden bloom wilt shatter crumble scatter gather rebuild repeat replace erase save share
+paint kiss hug pray promise remain arrive travel settle shift trace tremble shiver wave rush slip
+drop count collect hurt heal mend miss knock rattle crack ache yearn long return circle whirl twist
+bury carve stitch weave borrow lend owe believe imagine recall recognise recognize pretend dare care
+fear worry wonder hurry visit welcome plant water warm cool fill pass mark mirror wash dry soak sail
+row bounce roll use plant settle taste jump kick hunt hate like enjoy last seem happen exist matter belong live`;
+
+const LEX = new Map(); // form -> { base, form: 'base'|'3sg'|'past'|'pp'|'ing'|'modal' }
+
+function third(base) {
+  if (/(s|sh|ch|x|z|o)$/.test(base)) return base + 'es';
+  if (/[^aeiou]y$/.test(base)) return base.slice(0, -1) + 'ies';
+  return base + 's';
+}
+function past(base) {
+  if (base.endsWith('e')) return base + 'd';
+  if (/[^aeiou]y$/.test(base)) return base.slice(0, -1) + 'ied';
+  return base + 'ed';
+}
+function ing(base) {
+  if (base.endsWith('ie')) return base.slice(0, -2) + 'ying';
+  if (base.endsWith('e') && !base.endsWith('ee')) return base.slice(0, -1) + 'ing';
+  return base + 'ing';
+}
+function add(form, entry) { if (!LEX.has(form)) LEX.set(form, entry); }
+
+for (const base of REGULAR.split(/\s+/).filter(Boolean)) {
+  add(base, { base, form: 'base' });
+  add(third(base), { base, form: '3sg' });
+  add(past(base), { base, form: 'past' });
+  add(ing(base), { base, form: 'ing' });
+}
+for (const [base, [p, pp]] of Object.entries(IRREGULAR)) {
+  add(base, { base, form: 'base' });
+  add(third(base), { base, form: '3sg' });
+  add(p, { base, form: 'past' });
+  add(pp, { base, form: 'pp' });
+  add(ing(base), { base, form: 'ing' });
+}
+// "have" and "do" are irregular in the present too
+LEX.set('has', { base: 'have', form: '3sg' });
+LEX.set('does', { base: 'do', form: '3sg' });
+LEX.set('goes', { base: 'go', form: '3sg' });
+add('have', { base: 'have', form: 'base' });
+for (const b of ['am', 'is', 'are']) LEX.set(b, { base: 'be', form: 'be-present' });
+for (const b of ['was', 'were']) LEX.set(b, { base: 'be', form: 'be-past' });
+for (const m of MODALS) LEX.set(m, { base: m, form: 'modal' });
+
+function verbInfo(word) {
+  const NEG = { "can't": 'can', "won't": 'will', "shan't": 'shall' };
+  const w = NEG[word] || word.replace(/n't$/, '');
+  if (LEX.has(w)) return LEX.get(w);
+  // doubled-consonant forms: stopped, humming
+  const m = w.match(/^(.*?)([b-df-hj-np-tv-z])\2(ed|ing)$/);
+  if (m && LEX.has(m[1] + m[2])) return { base: m[1] + m[2], form: m[3] === 'ed' ? 'past' : 'ing' };
+  // unknown words that look like simple past tense ("whistled")
+  if (w.length >= 5 && w.endsWith('ed')) return { base: null, form: 'past' };
+  return null;
+}
+
+// --- subjects ----------------------------------------------------------------
+function subjectPerson(words) {
+  if (!words.length) return 'single';
+  if (words.length === 1 && SUBJECT_PRONOUNS[words[0]]) return SUBJECT_PRONOUNS[words[0]];
+  if (SUBJECT_PRONOUNS[words[0]] && !DETERMINERS.has(words[0])) return SUBJECT_PRONOUNS[words[0]];
+  if (words.includes('and')) return 'plural';
+  const last = words[words.length - 1];
+  if (IRREGULAR_PLURALS.has(last)) return 'plural';
+  if (last.length > 3 && last.endsWith('s') && !/(ss|us|is)$/.test(last)) return 'plural';
+  return 'single';
+}
+
+// Find where the predicate starts in a head phrase, or -1 for a fragment.
+function findVerb(words) {
+  let baseCandidate = -1;
+  for (let i = 1; i < words.length; i++) {
+    if (DETERMINERS.has(words[i - 1]) && !SUBJECT_PRONOUNS[words[i - 1]]) continue;
+    const info = verbInfo(words[i]);
+    if (!info) continue;
+    if (info.form === 'ing') continue; // "the falling rain" is not a verb here
+    if (info.form !== 'base') return i;
+    // a bare base form only counts after a plural or first-person subject
+    if (baseCandidate < 0 && subjectPerson(words.slice(0, i)) !== 'single') baseCandidate = i;
+  }
+  return baseCandidate;
+}
+
+// Make the first word of a predicate agree with a subject.
+function agree(subject, predicate) {
+  if (!predicate.length) return predicate;
+  const person = subjectPerson(subject);
+  const [first, ...rest] = predicate;
+  const neg = first.endsWith("n't") ? "n't" : '';
+  const info = verbInfo(first);
+  if (!info) return predicate;
+  let next = first;
+  if (info.form === 'be-present') next = BE_PRESENT[person];
+  else if (info.form === 'be-past') next = BE_PAST[person];
+  else if (info.form === '3sg' && person !== 'single') next = info.base;
+  else if (info.form === 'base' && person === 'single' && info.base) {
+    next = info.base === 'have' ? 'has' : info.base === 'do' ? 'does' : info.base === 'go' ? 'goes' : third(info.base);
+  }
+  if (neg && !next.endsWith("n't")) {
+    // isn't / aren't / doesn't / don't; "amn't" is not English
+    next = next === 'am' ? 'am not' : next + "n't";
+    if (next === "willn't") next = "won't";
+  }
+  return [next, ...rest];
+}
+
+// --- phrases -----------------------------------------------------------------
+// Cut a message into phrases: a head (everything before the first
+// preposition or conjunction) and tails. A tail starting with a
+// preposition ("over the old harbour") can move to any sentence. A tail
+// starting with a conjunction ("and remember loudly") depends on its own
+// subject, so it is "bound" and never moves away from it.
+function phrases(words) {
+  const out = [];
+  let cur = [];
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    const boundary = (PREPOSITIONS.has(w) || CONJUNCTIONS.has(w)) && cur.length >= 1 && i < words.length - 1;
+    if (boundary) { out.push(cur); cur = []; }
+    cur.push(w);
+  }
+  if (cur.length) out.push(cur);
+  return out;
+}
+
+function contentWords(words) {
+  return words.filter((w) => !STOPWORDS.has(w) && w.length > 2);
+}
+
+function stem(w) {
+  return w.replace(/(ies|es|s|ed|ing)$/, '');
+}
+
+// Build a form of any verb base (multi-word bases inflect their first word:
+// "long for" -> "longed for").
+function inflect(base, form) {
+  const [head, ...rest] = base.split(' ');
+  let w = head;
+  const irr = IRREGULAR[head];
+  if (form === '3sg') w = head === 'have' ? 'has' : head === 'do' ? 'does' : head === 'go' ? 'goes' : third(head);
+  else if (form === 'past') w = irr ? irr[0] : past(head);
+  else if (form === 'pp') w = irr ? irr[1] : past(head);
+  else if (form === 'ing') w = ing(head);
+  return [w, ...rest].join(' ');
+}
+
+module.exports = {
+  PREPOSITIONS, CONJUNCTIONS, DETERMINERS, MODALS, findVerb, agree, phrases, contentWords, stem,
+  subjectPerson, verbInfo, inflect, ADVERBS
+};
+
+};
+__mods['moderation'] = function (module, exports, require) {
+// Moderation for inputs (what visitors submit) and outputs (what the
+// transformation produces). Deliberately rule-based and transparent:
+// every rejection reason is something we can show the visitor.
+
+const MAX_CHARS = 140;
+const MIN_CHARS = 3;
+const MAX_WORDS = 20;
+
+// A small starter blocklist. Extend it for your context (and languages).
+// Entries are matched against normalized words, so leetspeak like
+// "sh1t" is caught by the normalizer below.
+const BLOCKED_WORDS = [
+  'fuck', 'fucking', 'fucker', 'shit', 'cunt', 'bitch', 'whore', 'slut',
+  'nigger', 'nigga', 'faggot', 'fag', 'retard', 'retarded', 'tranny',
+  'kike', 'spic', 'chink', 'paki', 'raghead', 'wetback', 'dyke',
+  'rape', 'rapist', 'nazi', 'kys', 'killyourself', 'porn', 'cock', 'dick',
+  'pussy', 'penis', 'vagina', 'cum', 'nude', 'nudes'
+];
+const BLOCKED = new Set(BLOCKED_WORDS);
+
+// Stems that are offensive wherever they appear inside a word. Kept short
+// and specific so innocent words ("therapist", "grape", "peacock") pass.
+const BLOCKED_STEMS = ['fuck', 'shit', 'cunt', 'nigg', 'fagg', 'whore', 'bitch'];
+
+// Phrases that signal threats or self-harm encouragement.
+const BLOCKED_PHRASES = [
+  /\bkill (yo)?u?r?self\b/i,
+  /\bi will (kill|hurt|find)\b/i,
+  /\bgo die\b/i,
+  /\bbomb\b/i,
+  /\bshoot (up|you|them)\b/i
+];
+
+// Patterns that look like identifying information.
+const PII_PATTERNS = [
+  { re: /[\w.+-]+@[\w-]+\.[\w.-]+/, why: 'an email address' },
+  { re: /(https?:\/\/|www\.)\S+/i, why: 'a link' },
+  { re: /\b[\w-]+\.(com|net|org|io|ae|co|me|app|dev|edu|gov)\b/i, why: 'a web address' },
+  { re: /(\+?\d[\d\s().-]{6,}\d)/, why: 'a phone or ID number' },
+  { re: /\d{5,}/, why: 'a long number' },
+  { re: /(^|\s)@\w{2,}/, why: 'a social media handle' },
+  { re: /\b(my name is|i am called|i'm called|call me)\b/i, why: 'a name introduction' },
+  { re: /\b(i live (at|on)|my address|street|apartment|apt\.?|room \d)\b/i, why: 'a location or address' },
+  { re: /\b(passport|social security|ssn|emirates id|password|pin code)\b/i, why: 'an ID or credential' }
+];
+
+const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', '$': 's', '!': 'i' };
+
+function normalizeWord(w) {
+  return w
+    .toLowerCase()
+    .replace(/[013457@$!]/g, (c) => LEET[c] || c)
+    .replace(/[^a-z]/g, '')
+    .replace(/(.)\1{2,}/g, '$1$1'); // "shiiiit" -> "shiit"
+}
+
+function containsBlockedWord(text) {
+  const words = text.split(/\s+/).map(normalizeWord).filter(Boolean);
+  for (const w of words) {
+    if (BLOCKED.has(w)) return true;
+    // collapse doubled letters too: "shiit" -> "shit"
+    if (BLOCKED.has(w.replace(/(.)\1+/g, '$1'))) return true;
+  }
+  // Catch words spelled out with spaces ("f u c k"): squash runs of
+  // single-letter words only, so "wash it" never becomes "washit".
+  const runs = text.toLowerCase().match(/(?:\b\w\b[\s.\-_*]*){3,}/g) || [];
+  for (const run of runs) {
+    const sq = normalizeWord(run);
+    if (BLOCKED.has(sq) || BLOCKED_STEMS.some((b) => sq.includes(b))) return true;
+  }
+  for (const w of words) {
+    if (BLOCKED_STEMS.some((b) => w.includes(b))) return true;
+  }
+  return false;
+}
+
+// Returns { ok: true, text } or { ok: false, reason }.
+function moderateInput(raw) {
+  if (typeof raw !== 'string') return { ok: false, reason: 'Message must be text.' };
+  // Strip control chars and zero-width chars, collapse whitespace.
+  const text = raw
+    .normalize('NFKC')
+    .replace(/[\u0000-\u001f\u007f\u200b-\u200f\u2028-\u202f\u2060\ufeff]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (text.length < MIN_CHARS) return { ok: false, reason: 'Message is too short.' };
+  if (text.length > MAX_CHARS) return { ok: false, reason: `Keep it under ${MAX_CHARS} characters.` };
+  if (text.split(' ').length > MAX_WORDS) return { ok: false, reason: `Keep it under ${MAX_WORDS} words.` };
+  if (!/[a-zA-ZÀ-ɏ]{2,}/.test(text)) return { ok: false, reason: 'Message needs some words.' };
+  if (/(.)\1{5,}/.test(text)) return { ok: false, reason: 'Too many repeated characters.' };
+  const letters = text.replace(/[^a-zA-Z]/g, '');
+  if (letters.length > 12 && letters === letters.toUpperCase()) {
+    return { ok: false, reason: 'Please do not write in all caps.' };
+  }
+
+  for (const p of PII_PATTERNS) {
+    if (p.re.test(text)) {
+      return { ok: false, reason: `This looks like it contains ${p.why}. Please leave out anything that could identify you or someone else.` };
+    }
+  }
+  if (containsBlockedWord(text)) return { ok: false, reason: 'This message contains language the memory will not keep.' };
+  for (const re of BLOCKED_PHRASES) {
+    if (re.test(text)) return { ok: false, reason: 'This message contains language the memory will not keep.' };
+  }
+  return { ok: true, text };
+}
+
+// Output moderation: the transformation can splice words together, so
+// new offensive strings can appear that were never submitted. Mask any
+// token (or adjacent pair glued together) that trips the blocklist.
+const MASK = '\u2591\u2591\u2591'; // shown in place of masked words
+
+function isBadToken(w) {
+  if (!w) return false;
+  const n = normalizeWord(w);
+  if (BLOCKED.has(n) || BLOCKED.has(n.replace(/(.)\1+/g, '$1'))) return true;
+  for (const b of BLOCKED_STEMS) if (n.includes(b)) return true;
+  return false;
+}
+
+function moderateOutput(tokens) {
+  let masked = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (isBadToken(t.w)) { t.w = MASK; masked++; }
+    if (t.ghost && isBadToken(t.ghost)) { t.ghost = null; masked++; }
+    const next = tokens[i + 1];
+    if (next && isBadToken(t.w + next.w)) { next.w = MASK; masked++; }
+  }
+  return masked;
+}
+
+module.exports = { moderateInput, moderateOutput, normalizeWord, MAX_CHARS, MASK };
+
+};
+__mods['reformulate'] = function (module, exports, require) {
+// Retelling: the last step before anything is shown or stored as output.
+//
+// The rules in transform.js decide what the memory holds. This step decides
+// how it is *told*, so that nobody can read a contributor's original
+// message back out of it while every sentence stays understandable:
+//
+//   1. re-pair   every subject is told with another sentence's verb, and
+//                place phrases rotate to other sentences
+//   2. person    I / we / you / my / your ... become someone / they / their
+//   3. tense     everything is retold in the past ("remembers" -> "remembered")
+//   4. wording   common words are replaced with near-synonyms
+//   5. guarantee no run of four words from any original message survives;
+//                if one does, a quiet modifier is woven into it
+//
+// The internal state is never changed, only a copy of it, so the rules keep
+// working on what people actually wrote.
+
+const G = require('./grammar');
+
+// --- vocabulary --------------------------------------------------------------
+const NOUNS = parse(`
+sea: tide ocean | ocean: sea tide | water: current tide | rain: drizzle downpour | storm: squall tempest
+wind: breeze gust | sky: heavens | sun: daylight | moon: crescent | star: spark | light: glow brightness
+night: dusk | morning: dawn daybreak | day: daylight | evening: dusk twilight | shadow: shade
+city: town | street: lane road | road: path lane | house: dwelling | room: chamber
+kitchen: hearth | door: doorway threshold | window: pane | wall: brickwork | floor: ground | bed: pillow
+table: counter | drawer: cupboard box | box: case | letter: note | book: volume | page: leaf
+photo: picture | picture: image | song: tune melody | music: melody | voice: whisper | word: phrase
+name: label | face: gaze | eye: gaze | hand: palm | heart: pulse | footstep: step tread | step: footfall
+friend: companion | grandpa: elder | grandma: elder | mom: parent | mum: parent | dad: parent
+papa: parent | mama: parent | mother: parent | father: parent | grandmother: elder | grandfather: elder
+sister: sibling | brother: sibling | child: little one | family: kin | man: figure | woman: figure
+tree: branch | flower: blossom | garden: yard | river: stream | bridge: crossing | harbour: port dock
+harbor: port dock | station: platform | train: carriage | school: classroom | time: hours | year: season
+summer: heat | winter: cold | memory: recollection | dream: vision | story: tale | echo: reverberation
+silence: hush | fire: flame | smoke: haze | salt: brine | stone: pebble | sand: dust | snow: frost
+cloud: mist | bird: wing | dog: hound | phone: screen | coffee: brew | tea: brew | bread: loaf | food: meal
+smell: scent | sound: noise | place: spot | world: earth | life: days | love: tenderness | fear: dread
+road: path | field: meadow | hill: slope | mountain: peak | island: isle | boat: vessel | ship: vessel
+`);
+const IRREGULAR_PLURAL_NOUNS = { people: 'others', children: 'little ones', men: 'figures', women: 'figures' };
+
+const MODIFIERS = parse(`
+old: aged weathered | new: fresh | small: little | little: small | big: vast | quiet: hushed still
+loud: noisy | soft: gentle | warm: mild | cold: cool | dark: dim | bright: vivid | happy: glad
+sad: heavy | empty: hollow | open: ajar | lost: missing | slow: unhurried | fast: swift | quieter: softer
+softly: gently quietly | loudly: aloud boldly | slowly: gradually | always: forever | never: not once
+anymore: these days | again: once more | together: side by side | alone: by themselves | often: frequently
+far: distant | beautiful: lovely | strange: odd | tired: weary | last: final | every: each | quietly: softly
+gently: softly | suddenly: at once | forever: always
+`);
+
+const VERBS = parse(`
+remember: recall | forget: let go | fold: crease | hum: murmur | whisper: murmur | sing: chant
+dance: sway | keep: hold store | wait: linger | walk: wander stroll | speak: murmur | say: murmur
+look: gaze | see: glimpse notice | watch: observe | hear: catch | listen: hear | love: cherish
+miss: long for ache for | want: wish for | run: hurry rush | fall: drop tumble
+follow: trail | close: shut | drift: float wander | float: drift | flow: stream | cry: weep
+laugh: chuckle | smile: grin | sleep: rest | dream: imagine | hold: clutch | carry: bear
+break: crack | write: scribble | call: summon | come: arrive | go: wander | return: come back
+grow: swell | burn: blaze | shine: gleam | glow: shine | fade: dim | stay: remain | live: dwell
+die: perish | know: sense | think: wonder | feel: sense | touch: brush | hope: wish | find: discover
+lose: misplace | hide: conceal | wake: stir | rise: climb | sit: rest | begin: start | end: cease
+stop: halt | change: shift | move: shift | travel: journey | share: pass on | give: offer | bring: carry
+make: shape | tell: murmur | answer: reply | meet: find | turn: spin | shake: tremble | tremble: shiver
+breathe: sigh | eat: taste | drink: sip | kiss: brush | hug: hold | echo: repeat | linger: stay
+vanish: disappear | appear: emerge | become: turn into
+`);
+
+const PERSON = {
+  me: 'them', us: 'them', my: 'their', our: 'their', your: 'their', mine: 'theirs', ours: 'theirs',
+  yours: 'theirs', myself: 'themselves', ourselves: 'themselves', yourself: 'themselves',
+  yourselves: 'themselves', i: 'they', we: 'they', you: 'them'
+};
+const SUBJECT_PERSON = { i: 'someone', we: 'they', you: 'someone else' };
+
+const PAST_NEGATIVE = {
+  "don't": "didn't", "doesn't": "didn't", "isn't": "wasn't", "aren't": "weren't", "can't": "couldn't",
+  "won't": "wouldn't", "haven't": "hadn't", "hasn't": "hadn't", "shouldn't": "shouldn't"
+};
+const MODAL_PAST = { will: 'would', can: 'could', shall: 'should', may: 'might' };
+const AUX = new Set(['am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'has', 'have', 'had', 'do', 'does', 'did', ...G.MODALS]);
+
+// Weave-in words used only when a long run of someone's original wording
+// would otherwise survive.
+const WEAVE_ADJ = ['faint', 'distant', 'half-remembered', 'pale', 'borrowed', 'quiet', 'small'];
+
+function parse(src) {
+  const map = {};
+  for (const entry of src.split(/\||\n/)) {
+    const [k, v] = entry.split(':');
+    if (!k || !v) continue;
+    map[k.trim()] = v.trim().split(/\s{1,}(?=[a-z])/).length && v.trim();
+  }
+  // values are space-separated alternatives, except known multi-word ones
+  const multi = ['long for', 'ache for', 'let go', 'wish for', 'come back', 'pass on', 'turn into', 'little one',
+    'not once', 'these days', 'once more', 'side by side', 'by themselves', 'at once'];
+  for (const k of Object.keys(map)) {
+    let v = map[k];
+    const opts = [];
+    for (const m of multi) if (v.includes(m)) { opts.push(m); v = v.replace(m, ' '); }
+    opts.push(...v.split(/\s+/).filter(Boolean));
+    map[k] = opts;
+  }
+  return map;
+}
+
+// --- helpers ------------------------------------------------------------------
+function hash32(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return h >>> 0;
+}
+const choose = (opts, key) => opts[hash32(key) % opts.length];
+const plural = (w) => (/(s|sh|ch|x|z)$/.test(w) ? w + 'es' : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + 'ies' : w + 's');
+const norm = (w) => w.toLowerCase().replace(/[.,]/g, '');
+
+function nounSwap(w, key) {
+  if (IRREGULAR_PLURAL_NOUNS[w]) return IRREGULAR_PLURAL_NOUNS[w];
+  if (NOUNS[w]) return choose(NOUNS[w], key + w);
+  const sing = w.endsWith('ies') ? w.slice(0, -3) + 'y' : w.endsWith('es') && NOUNS[w.slice(0, -2)] ? w.slice(0, -2) : w.endsWith('s') ? w.slice(0, -1) : null;
+  if (sing && NOUNS[sing]) {
+    const s = choose(NOUNS[sing], key + sing);
+    return s.includes(' ') ? s.replace(/(\w+)$/, (x) => plural(x)) : plural(s);
+  }
+  return null;
+}
+
+// Rewrite one ordinary word (not the finite verb): person, modifiers, nouns.
+// `next` lets "you" before a verb ("you would stay") become a subject.
+function word(w, key, isSubjectStart, next) {
+  if (isSubjectStart && SUBJECT_PERSON[w]) return SUBJECT_PERSON[w];
+  if (w === 'you' && next && G.verbInfo(next)) return 'they';
+  if (PERSON[w]) return PERSON[w];
+  const poss = w.match(/^(.+)'s$/);
+  if (poss) { const n = nounSwap(poss[1], key); if (n) return n + "'s"; }
+  if (MODIFIERS[w]) return choose(MODIFIERS[w], key + w);
+  return nounSwap(w, key) || w;
+}
+
+// Retell a verb chain in the past: "keeps" -> "held", "is waiting" -> "was waiting".
+function pastChain(words, key) {
+  const out = words.slice();
+  const first = out[0];
+  if (PAST_NEGATIVE[first]) out[0] = PAST_NEGATIVE[first];
+  else if (MODAL_PAST[first]) out[0] = MODAL_PAST[first];
+  else {
+    const info = G.verbInfo(first);
+    if (info) {
+      let base = info.base;
+      const isAux = AUX.has(first);
+      if (!isAux && base && VERBS[base]) base = choose(VERBS[base], key + base);
+      if (info.form === 'be-present') out[0] = first === 'are' ? 'were' : 'was';
+      else if (first === 'has' || first === 'have') out[0] = 'had';
+      else if (first === 'do' || first === 'does') out[0] = 'did';
+      else if (base && (info.form === 'base' || info.form === '3sg')) out[0] = G.inflect(base, 'past');
+      else if (base && base !== info.base) out[0] = G.inflect(base, info.form);
+    }
+  }
+  // a main verb after an auxiliary keeps its form but may change its word
+  for (let i = 1; i < out.length && AUX.has(words[i - 1]); i++) {
+    const info = G.verbInfo(out[i]);
+    if (info && info.base && VERBS[info.base] && !AUX.has(out[i])) {
+      out[i] = G.inflect(choose(VERBS[info.base], key + info.base), info.form === 'base' ? 'base' : info.form);
+    }
+  }
+  return out.join(' ').split(' ');
+}
+
+function verbChainLength(words) {
+  if (!words.length) return 0;
+  let n = 1;
+  while (n < words.length && AUX.has(words[n - 1]) && (G.verbInfo(words[n]) || words[n] === 'not')) n++;
+  return n;
+}
+
+// Past tense needs agreement only for "was/were".
+function agreePast(subject, chain) {
+  if (chain[0] !== 'was' && chain[0] !== 'were') return chain;
+  const p = G.subjectPerson(subject);
+  return [p === 'plural' ? 'were' : 'was', ...chain.slice(1)];
+}
+
+// Leading adverbs, then the verb chain in the past, then the rest.
+function retellPredicate(subject, words, key) {
+  let lead = 0;
+  while (lead < words.length - 1 && (G.ADVERBS.has(words[lead]) || (/ly$/.test(words[lead]) && !G.verbInfo(words[lead])))) lead++;
+  const adv = words.slice(0, lead).map((w) => word(w, key, false));
+  const body = words.slice(lead);
+  const n = verbChainLength(body);
+  const chain = agreePast(subject, pastChain(body.slice(0, n), key));
+  const rest = body.slice(n);
+  const restOut = rest.map((w, i) => word(w, key, false, rest[i + 1]));
+  return [...adv, ...chain, ...restOut];
+}
+
+// --- the retelling -----------------------------------------------------------
+function retell(state) {
+  const clauses = state.flatMap((s) => s.clauses);
+
+  // 1. re-pair subjects with other sentences' verbs (a derangement where possible)
+  const full = clauses.filter((c) => c.subj && c.pred);
+  if (full.length >= 2) {
+    const n = full.length;
+    let k = 1;
+    for (let t = 1; t < n; t++) {
+      if (full.every((c, i) => full[(i + t) % n].subj.src !== c.pred.src || c.pred.src === 0)) { k = t; break; }
+    }
+    const subjects = full.map((c) => c.subj);
+    full.forEach((c, i) => { c.subj = subjects[(i + k) % n]; });
+  }
+  // rotate place phrases one sentence onward
+  const owners = [];
+  for (const c of clauses) c.tails.forEach((t, i) => { if (t.kind === 'place') owners.push([c, i]); });
+  if (owners.length >= 2) {
+    const tails = owners.map(([c, i]) => c.tails[i]);
+    owners.forEach(([c, i], j) => { c.tails[i] = tails[(j + 1) % tails.length]; });
+  }
+
+  // 2–4. person, tense, wording
+  clauses.forEach((c, ci) => {
+    const key = `c${ci}`;
+    if (c.subj) c.subj.words = c.subj.words.map((w, i) => word(w, key, i === 0));
+    if (c.frag) c.frag.words = c.frag.words.map((w, i) => word(w, key, i === 0));
+    if (c.pred) c.pred.words = retellPredicate(c.subj.words, c.pred.words, key);
+    for (const t of c.tails) {
+      const after = t.words.slice(1);
+      const ownSubject = t.kind === 'bound' && after.length > 1 && G.findVerb(after) > 0 && !G.verbInfo(after[0]);
+      if (ownSubject) {
+        // "and i am tired": a clause with its own subject
+        const v = G.findVerb(after);
+        const subj = after.slice(0, v).map((w, i) => word(w, key, i === 0));
+        t.words = [t.words[0], ...subj, ...retellPredicate(subj, after.slice(v), key + 'b')];
+      } else if (t.kind === 'bound' && after.length && (G.verbInfo(after[0]) || G.ADVERBS.has(after[0]))) {
+        // "and remember loudly": shares the clause's subject
+        t.words = [t.words[0], ...retellPredicate(c.subj ? c.subj.words : ['it'], after, key + 'b')];
+      } else {
+        t.words = t.words.map((w, i) => word(w, key, false, t.words[i + 1]));
+      }
+    }
+    for (const ch of [c.subj, c.pred, c.frag, ...c.tails]) {
+      if (ch && ch.ghost) ch.ghost = ch.ghost.split(' ').map((w) => word(w, key, false)).join(' ');
+    }
+  });
+  return state;
+}
+
+// Fix a/an, and give bare kinship nouns an article ("grandpa" -> "an elder").
+const NEEDS_ARTICLE = new Set(['elder', 'parent', 'companion', 'sibling']);
+const OWNERS = new Set(['their', 'theirs', 'his', 'her', 'its', 'the', 'a', 'an', 'each', 'every', 'this', 'that', 'no', 'some', 'aged', 'weathered', 'old', 'faint', 'distant', 'pale', 'quiet', 'small', 'borrowed', 'half-remembered']);
+function polish(tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const bare = norm(tokens[i].w);
+    const prev = i > 0 ? norm(tokens[i - 1].w).replace(/'s$/, '') : '';
+    const prevPossessive = i > 0 && /'s$/.test(tokens[i - 1].w);
+    if (NEEDS_ARTICLE.has(bare) && !OWNERS.has(prev) && !prevPossessive) {
+      const start = tokens[i].start;
+      tokens.splice(i, 0, { w: 'a', src: tokens[i].src, age: tokens[i].age, echoes: 0, ghost: null, start });
+      tokens[i + 1].start = false;
+      i++;
+    }
+  }
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const t = tokens[i];
+    const bare = norm(t.w);
+    if (bare !== 'a' && bare !== 'an') continue;
+    const next = norm(tokens[i + 1].w);
+    const vowel = /^(hour|honest|heir)/.test(next) || (/^[aeiou]/.test(next) && !/^(one|uni|use|eu)/.test(next));
+    t.w = t.w.replace(/^an?/, vowel ? 'an' : 'a');
+  }
+  return tokens;
+}
+
+// 5. guarantee: break any surviving run of 4+ consecutive original words.
+const RUN = 4;
+function breakRuns(tokens, messages, tokenize) {
+  const grams = new Set();
+  for (const m of messages) {
+    const ws = tokenize(m.text);
+    for (let i = 0; i + RUN <= ws.length; i++) grams.add(ws.slice(i, i + RUN).join(' '));
+  }
+  for (let pass = 0; pass < 20; pass++) {
+    let hit = -1;
+    for (let i = 0; i + RUN <= tokens.length; i++) {
+      if (grams.has(tokens.slice(i, i + RUN).map((t) => norm(t.w)).join(' '))) { hit = i; break; }
+    }
+    if (hit < 0) return tokens;
+    // weave an adjective in after a determiner inside the run; else after its first word
+    let at = -1;
+    for (let j = hit; j < hit + RUN - 1; j++) {
+      if (G.DETERMINERS.has(norm(tokens[j].w)) && !/[.,]$/.test(tokens[j].w)) { at = j + 1; break; }
+    }
+    const adj = WEAVE_ADJ[(hit + pass) % WEAVE_ADJ.length];
+    if (at < 0) {
+      // no determiner: put "once" before the run's verb, or "and" can't be split; fall back to a pause
+      at = hit + 1;
+      tokens.splice(at, 0, { w: '…', src: 0, age: tokens[hit].age, echoes: 0, ghost: null, link: true });
+    } else {
+      tokens.splice(at, 0, { w: adj, src: 0, age: tokens[at].age, echoes: 0, ghost: null, link: true });
+    }
+  }
+  return tokens;
+}
+
+module.exports = { retell, polish, breakRuns, RUN };
+
+};
+__mods['transform'] = function (module, exports, require) {
+// The server-side transformation function.
+//
+// The memory is never edited in place. It is *reconstructed* by replaying
+// every surviving message, in order, through a small set of controlled,
+// deterministic rules. Each rule's randomness is seeded by the message
+// itself, so the same messages always yield the same memory, and removing
+// one (erase my trace) yields a different memory.
+//
+// To keep the result readable, rules never move single words. They move
+// whole phrases (see grammar.js), so every sentence keeps a subject, a
+// verb and its places: "the sea remembers every footstep" and "light folds
+// over the old harbour" can become "light remembers every footstep over
+// the old harbour", never "harbour footstep the folds".
+//
+// Structure:
+//   sentence = { clauses: [clause], links: ['while'], echoes, age }
+//   clause   = { subj, pred, frag, tails: [chunk] }   (subj+pred, or frag)
+//   chunk    = { words: [], src, age, ghost, ghostAge, echoes, kind }
+
+const G = require('./grammar');
+const R = require('./reformulate');
+
+// Contractions are opened up so the grammar can see subject and verb.
+const CONTRACTIONS = {
+  "i'm": 'i am', "i've": 'i have', "i'll": 'i will', "i'd": 'i would', "we're": 'we are',
+  "we've": 'we have', "we'll": 'we will', "you're": 'you are', "you've": 'you have',
+  "they're": 'they are', "they've": 'they have', "it's": 'it is', "that's": 'that is',
+  "there's": 'there is', "let's": 'let us', "she's": 'she is', "he's": 'he is'
+};
+
+const SEED_TEXT = 'nothing here has been remembered yet';
+const CAPACITY = 56;        // words; beyond this the memory forgets
+const MAX_SENTENCES = 6;
+const MAX_TAILS = 3;        // place phrases per clause
+const GHOST_LIFETIME = 3;   // messages a replaced phrase lingers as a ghost
+const MAX_WORDS_PER_MSG = 20;
+
+const LINKS_CLAUSE = ['while', 'and', 'where', 'until', 'as', 'and'];
+const LINKS_FRAGMENT = ['and', 'with', 'beside'];
+
+// Exported so the front end and the privacy page can describe them.
+const RULES = [
+  { id: 'age', label: 'Everything already remembered grows one step older and fainter.' },
+  { id: 'echo', label: 'A message that shares a word with a remembered sentence strengthens that sentence and is drawn towards it.' },
+  { id: 'join', label: 'A new sentence may be joined to an old one with a small linking word (while, where, until…).' },
+  { id: 'overwrite', label: 'A new subject and verb may overwrite an old one. The old words linger as a ghost, and the old places stay.' },
+  { id: 'swap', label: 'Two sentences may exchange subjects; verbs change to agree ("we remember" becomes "the sea remembers").' },
+  { id: 'exchange', label: 'Two sentences may trade a place phrase ("in the rain" for "over the old harbour").' },
+  { id: 'forget', label: 'When the memory is full, the oldest, least-echoed phrases are forgotten first, then whole sentences.' }
+];
+
+// --- deterministic randomness -------------------------------------------
+function hash32(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const pick = (rand, arr) => arr[Math.floor(rand() * arr.length)];
+
+// --- parsing -------------------------------------------------------------
+function tokenize(text) {
+  return text
+    .toLowerCase()
+    .replace(/[‘’]/g, "'")
+    .replace(/[^\p{L}\p{N}'\s-]/gu, ' ')
+    .split(/\s+/)
+    .map((w) => w.replace(/^['-]+|['-]+$/g, '').slice(0, 18))
+    .filter(Boolean)
+    .flatMap((w) => (CONTRACTIONS[w] ? CONTRACTIONS[w].split(' ') : [w]))
+    .slice(0, MAX_WORDS_PER_MSG);
+}
+
+const chunk = (words, src, kind) => ({ words, src, age: 0, ghost: null, ghostAge: 0, echoes: 0, kind });
+
+function parseClause(words, src) {
+  const parts = G.phrases(words);
+  if (!parts.length) return null;
+  const head = parts[0];
+  const clause = { subj: null, pred: null, frag: null, tails: [] };
+  const startsWithPlace = G.PREPOSITIONS.has(head[0]);
+  const v = startsWithPlace ? -1 : G.findVerb(head);
+  // adverbs just before the verb belong to the predicate ("she | never called")
+  let cut = v;
+  while (cut > 1 && (G.ADVERBS.has(head[cut - 1]) || /ly$/.test(head[cut - 1]))) cut--;
+  if (v > 0) {
+    clause.subj = chunk(head.slice(0, cut), src, 'subj');
+    clause.pred = chunk(head.slice(cut), src, 'pred');
+  } else if (false) {
+    clause.pred = chunk(head.slice(v), src, 'pred');
+  } else {
+    clause.frag = chunk(head, src, 'frag');
+  }
+  for (const p of parts.slice(1)) {
+    clause.tails.push(chunk(p, src, G.CONJUNCTIONS.has(p[0]) ? 'bound' : 'place'));
+  }
+  return clause;
+}
+
+// Re-agree a clause's verbs with its (possibly new) subject, including
+// verbs in its "and …" phrases ("and remember loudly" -> "and remembers loudly").
+function agreeClause(c) {
+  if (!c.subj || !c.pred) return;
+  c.pred.words = G.agree(c.subj.words, c.pred.words);
+  for (const t of c.tails) {
+    if (t.kind === 'bound' && t.words.length > 1 && G.verbInfo(t.words[1])) {
+      t.words = [t.words[0], ...G.agree(c.subj.words, t.words.slice(1))];
+    }
+  }
+}
+
+// Place phrases go before a clause's "and …" phrases, so they stay
+// attached to the first verb: "forgets softly in the kitchen and remembers".
+function addPlace(c, tail) {
+  const i = c.tails.findIndex((t) => t.kind === 'bound');
+  if (i < 0) c.tails.push(tail); else c.tails.splice(i, 0, tail);
+}
+
+const clauseChunks = (c) => [c.subj, c.pred, c.frag, ...c.tails].filter(Boolean);
+const sentenceChunks = (s) => s.clauses.flatMap(clauseChunks);
+const sentenceWords = (s) => sentenceChunks(s).flatMap((c) => c.words);
+const totalWords = (state) => state.reduce((n, s) => n + sentenceWords(s).length + s.links.length, 0);
+const text = (c) => c.words.join(' ');
+
+function newSentence(clause) {
+  return { clauses: [clause], links: [], echoes: 0, age: 0 };
+}
+
+function seedMemory() {
+  const s = newSentence(parseClause(tokenize(SEED_TEXT), 0));
+  s.age = 6;
+  for (const c of sentenceChunks(s)) c.age = 6;
+  return [s];
+}
+
+// --- one step ------------------------------------------------------------
+// The log is shown to the contributor, so it only ever names their own
+// words, never what anyone else wrote.
+function applyMessage(state, msg) {
+  const rand = mulberry32(hash32(`${msg.id}:${msg.text}`));
+  const words = tokenize(msg.text);
+  const log = [];
+  const clause = parseClause(words, msg.id);
+  if (!clause) return log;
+
+  // 1. age
+  for (const s of state) {
+    s.age += 1;
+    for (const c of sentenceChunks(s)) {
+      c.age += 1;
+      if (c.ghost && ++c.ghostAge > GHOST_LIFETIME) { c.ghost = null; c.ghostAge = 0; }
+    }
+  }
+
+  // 2. echo: find the remembered sentence that shares the most words
+  const mine = new Set(G.contentWords(words).map(G.stem));
+  let target = null;
+  let shared = [];
+  for (const s of state) {
+    const hits = [...new Set(G.contentWords(sentenceWords(s)).filter((w) => mine.has(G.stem(w))))];
+    if (hits.length > shared.length) { target = s; shared = hits; }
+  }
+  if (target) {
+    target.echoes += 1;
+    target.age = 0;
+    for (const c of sentenceChunks(target)) if (c.words.some((w) => shared.includes(w))) c.echoes += 1;
+    log.push({ rule: 'echo' });
+  } else {
+    const older = state.filter((s) => s.age >= 2);
+    if (older.length) target = pick(rand, older);
+  }
+
+  const newChunks = clauseChunks(clause);
+  const roll = rand();
+  const short = newChunks.reduce((n, c) => n + c.words.length, 0) <= 9;
+
+  if (target && target.clauses.length === 1 && short && roll < 0.22) {
+    // 3. join
+    const link = pick(rand, clause.frag ? LINKS_FRAGMENT : LINKS_CLAUSE);
+    target.clauses.push(clause);
+    target.links.push(link);
+    target.age = 0;
+    log.push({ rule: 'join', link });
+  } else if (target && roll < 0.42) {
+    // 4. overwrite: the new head takes an old clause's place; its places stay
+    const old = pick(rand, target.clauses);
+    const oldHead = [old.subj, old.pred, old.frag].filter(Boolean).map(text).join(' ');
+    old.subj = clause.subj; old.pred = clause.pred; old.frag = clause.frag;
+    const first = old.subj || old.frag;
+    first.ghost = oldHead;
+    // the old clause's own "and …" tails belonged to the old subject
+    const keptPlaces = old.tails.filter((t) => t.kind === 'place');
+    const lost = old.tails.filter((t) => t.kind !== 'place').map(text);
+    old.tails = clause.tails.slice();
+    for (const p of keptPlaces) if (old.tails.length < MAX_TAILS) addPlace(old, p);
+    target.age = 0;
+    log.push({ rule: 'overwrite' });
+  } else {
+    // 5. the message enters as its own sentence
+    const s = newSentence(clause);
+    const at = Math.floor(rand() * (state.length + 1));
+    state.splice(at, 0, s);
+    log.push({ rule: 'enter' });
+
+    const other = target && target !== s ? pick(rand, target.clauses) : null;
+    if (other && clause.subj && other.subj && rand() < 0.55) {
+      // 6. swap subjects, with agreement
+      const a = clause.subj, b = other.subj;
+      clause.subj = b; other.subj = a;
+      agreeClause(clause);
+      agreeClause(other);
+      a.ghost = text(b); a.ghostAge = 0;
+      log.push({ rule: 'swap', gave: text(a) });
+    } else if (other) {
+      // 7. exchange place phrases
+      const mineP = clause.tails.filter((t) => t.kind === 'place');
+      const theirs = other.tails.filter((t) => t.kind === 'place');
+      if (mineP.length && theirs.length) {
+        const x = pick(rand, mineP), y = pick(rand, theirs);
+        clause.tails[clause.tails.indexOf(x)] = y;
+        other.tails[other.tails.indexOf(y)] = x;
+        log.push({ rule: 'exchange', gave: text(x) });
+      } else if (mineP.length && other.tails.length < MAX_TAILS && rand() < 0.5) {
+        // lend a place phrase: it now belongs to both sentences' story
+        const x = pick(rand, mineP);
+        clause.tails.splice(clause.tails.indexOf(x), 1);
+        addPlace(other, x);
+        log.push({ rule: 'exchange', gave: text(x) });
+      }
+    }
+  }
+
+  // 8. forget: selective, not first-in-first-out; trims before it deletes
+  const forgotten = [];
+  const fresh = (s) => sentenceChunks(s).some((c) => c.src === msg.id && c.age === 0);
+  while (totalWords(state) > CAPACITY || state.length > MAX_SENTENCES) {
+    const candidates = state.filter((s) => !fresh(s));
+    if (!candidates.length) break;
+    const victim = candidates.reduce((a, b) => (b.age - 3 * b.echoes > a.age - 3 * a.echoes ? b : a));
+    const lastClause = victim.clauses[victim.clauses.length - 1];
+    if (lastClause.tails.length && totalWords(state) > CAPACITY && state.length <= MAX_SENTENCES) {
+      forgotten.push(text(lastClause.tails.pop()));
+    } else if (victim.clauses.length > 1) {
+      forgotten.push(clauseChunks(victim.clauses.pop()).map(text).join(' '));
+      victim.links.pop();
+    } else {
+      forgotten.push(sentenceWords(victim).join(' '));
+      state.splice(state.indexOf(victim), 1);
+    }
+  }
+  if (forgotten.length) log.push({ rule: 'forget', count: forgotten.length });
+
+  return log;
+}
+
+// --- output --------------------------------------------------------------
+// Flatten sentences into word tokens for drawing and storage.
+// What is shown and stored: the memory retold (see reformulate.js), so no
+// contributor's original wording can be read back out of it.
+function output(state, messages) {
+  const tokens = flatten(R.retell(clone(state)));
+  return R.breakRuns(R.polish(tokens), messages, tokenize);
+}
+
+function flatten(state) {
+  const tokens = [];
+  for (const s of state) {
+    const startAt = tokens.length;
+    s.clauses.forEach((c, ci) => {
+      if (ci > 0) {
+        tokens[tokens.length - 1].w += ',';
+        tokens.push({ w: s.links[ci - 1], src: 0, age: s.age, echoes: 0, ghost: null, link: true });
+      }
+      for (const ch of clauseChunks(c)) {
+        ch.words.forEach((w, wi) => {
+          tokens.push({ w, src: ch.src, age: ch.age, echoes: ch.echoes, ghost: wi === 0 ? ch.ghost : null });
+        });
+      }
+    });
+    if (tokens.length > startAt) {
+      tokens[startAt].start = true;
+      tokens[tokens.length - 1].w += '.';
+    }
+  }
+  return tokens;
+}
+
+function clone(state) {
+  return JSON.parse(JSON.stringify(state));
+}
+
+function reconstruct(messages) {
+  const state = seedMemory();
+  const snapshots = [];
+  const seen = [];
+  for (const msg of messages) {
+    const log = applyMessage(state, msg);
+    seen.push(msg);
+    snapshots.push({ messageId: msg.id, log, tokens: output(state, seen) });
+  }
+  return { tokens: output(state, messages), snapshots };
+}
+
+const display = (t) => {
+  const w = t.w.replace(/^i(?=$|'|[.,]$)/, 'I');
+  return t.start ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+};
+
+function publicView(tokens, highlightId = null) {
+  return tokens.map((t) => ({
+    w: display(t),
+    ghost: t.ghost,
+    fade: t.link ? 0.5 : Math.min(1, t.age / 14),
+    echoes: t.echoes,
+    mine: highlightId !== null && t.src === highlightId
+  }));
+}
+
+function plainText(tokens) {
+  return tokens.map(display).join(' ');
+}
+
+module.exports = { reconstruct, applyMessage, publicView, plainText, tokenize, RULES, CAPACITY };
+
+};
+
+(function () {
+  const { moderateInput, moderateOutput } = require('moderation');
+  const { reconstruct, publicView, plainText, RULES, CAPACITY } = require('transform');
+  const messages = [];
+  let nextId = 1;
+  let current = { tokens: [], version: 0 };
+  const snaps = new Map();
+
+  async function sha256(s) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  function newToken() {
+    const b = crypto.getRandomValues(new Uint8Array(18));
+    return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  const masked = (tokens) => { const c = tokens.map((t) => ({ ...t })); moderateOutput(c); return c; };
+  function rebuild() {
+    const { tokens, snapshots } = reconstruct(messages.map(({ id, text }) => ({ id, text })));
+    snaps.clear();
+    for (const s of snapshots) snaps.set(s.messageId, { log: s.log, tokens: masked(s.tokens) });
+    current = { tokens: masked(tokens), version: current.version + 1 };
+  }
+  const payload = (hid = null) => ({
+    version: current.version, words: publicView(current.tokens, hid), text: plainText(current.tokens),
+    contributions: messages.length, capacity: CAPACITY
+  });
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  async function submit(body) {
+    const { text, consent, website, elapsed } = body || {};
+    if (website || (typeof elapsed === 'number' && elapsed < 2500)) return [202, { ok: false, error: 'That was very fast. Wait a few seconds after the page loads, then try again.' }];
+    if (consent !== true) return [400, { ok: false, error: 'Please confirm that you understand how your words will be used.' }];
+    const mod = moderateInput(text);
+    if (!mod.ok) return [422, { ok: false, error: mod.reason }];
+    if (messages.some((m) => m.text.toLowerCase() === mod.text.toLowerCase() && m.day === today())) {
+      return [409, { ok: false, error: 'The memory already heard those exact words today.' }];
+    }
+    const before = plainText(current.tokens);
+    const token = newToken();
+    const id = nextId++;
+    messages.push({ id, text: mod.text, hash: await sha256(token), day: today() });
+    rebuild();
+    return [201, { ok: true, token, before, log: snaps.get(id).log, memory: payload(id) }];
+  }
+  async function erase(body) {
+    const token = String((body || {}).token || '').trim();
+    if (!/^[A-Za-z0-9_-]{20,40}$/.test(token)) return [400, { ok: false, error: 'That does not look like a deletion token.' }];
+    const h = await sha256(token);
+    const i = messages.findIndex((m) => m.hash === h);
+    if (i < 0) return [404, { ok: false, error: 'No trace matches that token. It may already have been erased.' }];
+    const before = plainText(current.tokens);
+    messages.splice(i, 1);
+    rebuild();
+    return [200, { ok: true, before, memory: payload() }];
+  }
+
+  const realFetch = window.fetch.bind(window);
+  window.fetch = async (url, opts = {}) => {
+    const u = new URL(url, location.href);
+    if (!u.pathname.startsWith('/api/')) return realFetch(url, opts);
+    const body = opts.body ? JSON.parse(opts.body) : null;
+    let res;
+    if (u.pathname === '/api/memory') {
+      res = Number(u.searchParams.get('since')) === current.version ? [200, { version: current.version, unchanged: true }] : [200, payload()];
+    } else if (u.pathname === '/api/rules') res = [200, { rules: RULES, capacity: CAPACITY, retentionDays: 90 }];
+    else if (u.pathname === '/api/submit') res = await submit(body);
+    else if (u.pathname === '/api/erase') res = await erase(body);
+    else res = [404, { ok: false }];
+    return new Response(JSON.stringify(res[1]), { status: res[0], headers: { 'Content-Type': 'application/json' } });
+  };
+
+  // Example messages so the memory opens with something in it.
+  window.__seed = async () => {
+    for (const t of ['the sea remembers every footstep', 'we forget softly and remember loudly',
+      'a door left open in the rain', 'my grandmother sang in the kitchen',
+      'the city hums under the bridge at night', 'the trees whisper about the storm']) {
+      await submit({ text: t, consent: true, elapsed: 9999 });
+    }
+  };
+  window.__reset = () => { messages.length = 0; nextId = 1; rebuild(); };
+  rebuild();
+})();
+
+</script>
+<script>
+// p5.js view of the memory. Words drift to new positions when the memory
+// is rearranged, fade as they age, and carry faint "ghosts" of the words
+// they replaced. Hovering a ghosted word shows the ghost plainly.
+
+(function () {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let words = [];    // currently shown
+  let leaving = [];  // removed words dissolving
+  let colors = {};
+  let fontSize = 30;
+  let pendingResize = true;
+
+  function readColors() {
+    const s = getComputedStyle(document.documentElement);
+    colors = {
+      paper: s.getPropertyValue('--paper').trim(),
+      ink: s.getPropertyValue('--ink').trim(),
+      muted: s.getPropertyValue('--muted').trim(),
+      accent: s.getPropertyValue('--accent').trim()
+    };
+  }
+
+  const sketch = (p) => {
+    const holder = document.getElementById('canvas-holder');
+    let serif;
+    let ready = false;
+    let queued = null;
+
+    function width() { return holder.clientWidth || 600; }
+
+    function layout() {
+      const w = width();
+      fontSize = w < 420 ? 21 : w < 600 ? 25 : 30;
+      const lineH = fontSize * 1.6;
+      const space = fontSize * 0.34;
+      const maxW = w - 8;
+      p.textSize(fontSize);
+      p.textFont(serif);
+
+      const lines = [[]];
+      let lineW = 0;
+      for (const wd of words) {
+        wd.width = p.textWidth(wd.w);
+        const add = (lines[lines.length - 1].length ? space : 0) + wd.width;
+        if (lineW + add > maxW && lines[lines.length - 1].length) {
+          lines.push([]);
+          lineW = 0;
+        }
+        lines[lines.length - 1].push(wd);
+        lineW += (lines[lines.length - 1].length > 1 ? space : 0) + wd.width;
+      }
+
+      const top = fontSize * 1.2;
+      lines.forEach((line, li) => {
+        const total = line.reduce((s, wd, i) => s + wd.width + (i ? space : 0), 0);
+        let x = (w - total) / 2;
+        for (const wd of line) {
+          wd.tx = x + wd.width / 2;
+          wd.ty = top + li * lineH;
+          x += wd.width + space;
+        }
+      });
+
+      const h = Math.max(200, top + lines.length * lineH + fontSize * 0.4);
+      if (p.width !== w || p.height !== h) p.resizeCanvas(w, h);
+    }
+
+    p.setup = () => {
+      // p5 quotes any font string containing spaces, so pass a space-free
+      // fallback list to keep it a valid CSS font stack.
+      serif = 'Palatino,Georgia,Charter,serif';
+      readColors();
+      const c = p.createCanvas(width(), 220);
+      c.parent(holder);
+      p.textAlign(p.CENTER, p.BASELINE);
+      p.frameRate(30);
+      p.pixelDensity(Math.min(2, window.devicePixelRatio || 1));
+      ready = true;
+      if (queued) { window.MemoryView.set(queued.words, queued.opts); queued = null; }
+      window.dispatchEvent(new Event('memoryview-ready'));
+    };
+
+    p.windowResized = () => { pendingResize = true; };
+
+    p.draw = () => {
+      if (pendingResize) { layout(); pendingResize = false; snapIfNeeded(); }
+      p.background(colors.paper);
+      p.textFont(serif);
+      const t = p.millis() / 1000;
+      let hovered = null;
+
+      for (let i = 0; i < words.length; i++) {
+        const wd = words[i];
+        const k = reduceMotion ? 1 : 0.08;
+        wd.x += (wd.tx - wd.x) * k;
+        wd.y += (wd.ty - wd.y) * k;
+        wd.appear = Math.min(1, wd.appear + (reduceMotion ? 1 : 0.03));
+
+        // ghost: the word this one overwrote or absorbed
+        if (wd.ghost) {
+          const wob = reduceMotion ? 0 : Math.sin(t * 0.9 + i) * 2.5;
+          p.textSize(fontSize * 0.92);
+          p.fill(withAlpha(colors.muted, 0.28 * wd.appear));
+          p.text(wd.ghost, wd.x + wob, wd.y - fontSize * 0.18);
+        }
+
+        // the readable word; older words fade
+        const alpha = (1 - 0.62 * wd.fade) * wd.appear;
+        p.textSize(fontSize);
+        p.textStyle(wd.echoes >= 2 ? p.BOLD : p.NORMAL);
+        p.fill(withAlpha(wd.mine && wd.highlightUntil > p.millis() ? colors.accent : colors.ink, alpha));
+        p.text(wd.w, wd.x, wd.y);
+        p.textStyle(p.NORMAL);
+
+        if (wd.mine && wd.highlightUntil > p.millis()) {
+          p.stroke(withAlpha(colors.accent, 0.7));
+          p.strokeWeight(1);
+          p.line(wd.x - wd.width / 2, wd.y + 5, wd.x + wd.width / 2, wd.y + 5);
+          p.noStroke();
+        }
+
+        if (wd.ghost && Math.abs(p.mouseX - wd.x) < wd.width / 2 + 4 &&
+            p.mouseY < wd.y + 6 && p.mouseY > wd.y - fontSize) {
+          hovered = wd;
+        }
+      }
+
+      // words that were erased or forgotten sink and dissolve
+      leaving = leaving.filter((wd) => wd.life > 0);
+      for (const wd of leaving) {
+        wd.life -= reduceMotion ? 1 : 0.025;
+        wd.y += 0.6;
+        p.textSize(fontSize);
+        p.fill(withAlpha(colors.accent, Math.max(0, wd.life) * 0.8));
+        p.text(wd.w, wd.x, wd.y);
+      }
+
+      if (hovered) {
+        p.textSize(13);
+        p.fill(colors.accent);
+        p.text('was: ' + hovered.ghost, hovered.x, hovered.y + 22);
+        p.cursor('help');
+      } else {
+        p.cursor('default');
+      }
+    };
+
+    function snapIfNeeded() {
+      for (const wd of words) {
+        if (wd.x === null) { wd.x = wd.tx; wd.y = wd.ty + 10; }
+      }
+    }
+
+    // Public: replace the memory with a new version, matching words so
+    // they drift rather than jump.
+    window.MemoryView = {
+      ready: () => ready,
+      set(next, opts = {}) {
+        if (!ready) { queued = { words: next, opts }; return; }
+        const highlight = !!opts.highlight;
+        const prev = words.slice();
+        const used = new Set();
+        words = next.map((n) => {
+          const match = prev.find((o, idx) => !used.has(idx) && o.w === n.w && (used.add(idx), true));
+          return {
+            w: n.w,
+            ghost: n.ghost,
+            fade: n.fade,
+            echoes: n.echoes,
+            mine: !!n.mine,
+            highlightUntil: highlight && n.mine ? p.millis() + 9000 : 0,
+            x: match ? match.x : null,
+            y: match ? match.y : null,
+            appear: match ? 1 : 0,
+            tx: 0, ty: 0, width: 0
+          };
+        });
+        prev.forEach((o, idx) => {
+          if (!used.has(idx) && o.x !== null) leaving.push({ w: o.w, x: o.x, y: o.y, life: 1 });
+        });
+        layout();
+        snapIfNeeded();
+      }
+    };
+  };
+
+  function withAlpha(hex, a) {
+    const h = hex.replace('#', '');
+    const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`;
+  }
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  new p5(sketch);
+})();
+
+</script>
+<script>
+window.__seed().then(() => {
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const loadedAt = Date.now();
+  let version = -1;
+  let lastText = '';
+
+  // ---- showing the memory --------------------------------------------------
+  function show(memory, opts) {
+    version = memory.version;
+    lastText = memory.text;
+    $('plain').textContent = memory.text;
+    $('count').textContent = `${memory.contributions} ${memory.contributions === 1 ? 'contribution' : 'contributions'} · reconstructed, not preserved`;
+    pendingView = [memory.words, opts];
+    if (window.MemoryView) { window.MemoryView.set(memory.words, opts); pendingView = null; }
+  }
+  let pendingView = null;
+  window.addEventListener('memoryview-ready', () => {
+    if (pendingView && window.MemoryView) { window.MemoryView.set(...pendingView); pendingView = null; }
+  });
+
+  async function poll() {
+    try {
+      const r = await fetch(`/api/memory?since=${version}`, { cache: 'no-store' });
+      const data = await r.json();
+      if (!data.unchanged) show(data);
+    } catch (_) { /* offline: try again next time */ }
+  }
+  poll();
+  setInterval(() => { if (!document.hidden) poll(); }, 12000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+
+  $('toggle-plain').addEventListener('click', (e) => {
+    const on = document.body.classList.toggle('plain-mode');
+    e.currentTarget.setAttribute('aria-pressed', String(on));
+    e.currentTarget.textContent = on ? 'show the drifting version' : 'read plainly';
+  });
+
+  // ---- contributing --------------------------------------------------------
+  const msg = $('message');
+  const consent = $('consent');
+  const submit = $('submit');
+  const status = $('form-status');
+
+  function refresh() {
+    $('chars').textContent = `${msg.value.length} / 140`;
+    submit.disabled = !(consent.checked && msg.value.trim().length >= 3);
+  }
+  msg.addEventListener('input', refresh);
+  consent.addEventListener('change', refresh);
+  msg.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!submit.disabled) $('form').requestSubmit(); }
+  });
+
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submit.disabled = true;
+    status.textContent = 'checking…';
+    try {
+      const r = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: msg.value,
+          consent: consent.checked,
+          website: $('website').value,
+          elapsed: Date.now() - loadedAt
+        })
+      });
+      const data = await r.json();
+      if (!data.ok) { status.textContent = data.error || 'Something went wrong.'; refresh(); return; }
+
+      status.textContent = '';
+      show(data.memory, { highlight: true });
+      renderLog(data.log);
+      $('token').textContent = data.token;
+      $('keep-token').disabled = false;
+      $('keep-token').textContent = 'keep on this device';
+      $('form').hidden = true;
+      $('result').hidden = false;
+      msg.value = '';
+      consent.checked = false;
+      refresh();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (_) {
+      status.textContent = 'Could not reach the memory. Try again.';
+      refresh();
+    }
+  });
+
+  // Turn the server's rule log into plain sentences.
+  function renderLog(log) {
+    const ul = $('log');
+    ul.textContent = '';
+    const say = (parts) => {
+      const li = document.createElement('li');
+      for (const part of parts) {
+        if (typeof part === 'string') li.append(part);
+        else { const em = document.createElement('em'); em.textContent = part.w; li.append(em); }
+      }
+      ul.append(li);
+    };
+    const w = (x) => ({ w: x });
+    for (const step of log) {
+      if (step.rule === 'echo') say(['your words echoed something the memory already held, so that sentence grew stronger.']);
+      if (step.rule === 'enter') say(['your words entered as a sentence of their own.']);
+      if (step.rule === 'join') say(['your words were joined to another sentence with ', w(step.link), '.']);
+      if (step.rule === 'overwrite') say(['your words overwrote part of an older sentence, which lingers faintly.']);
+      if (step.rule === 'swap') say(['your subject, ', w(step.gave), ', was given to another sentence.']);
+      if (step.rule === 'exchange') say(['your ', w(step.gave), ' moved into another sentence.']);
+      if (step.rule === 'forget') say([`to make room, the memory forgot ${step.count === 1 ? 'a phrase' : step.count + ' phrases'}.`]);
+    }
+    say(['then the whole memory was retold in its own words. The highlighted words came from you.']);
+  }
+
+  $('copy-token').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText($('token').textContent);
+      $('copy-token').textContent = 'copied';
+    } catch (_) {
+      $('copy-token').textContent = 'select and copy it';
+    }
+    setTimeout(() => { $('copy-token').textContent = 'copy'; }, 2000);
+  });
+
+  // ---- optional local token storage (this browser only) -------------------
+  const KEY = 'cm-tokens';
+  function savedTokens() {
+    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (_) { return []; }
+  }
+  function writeTokens(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); return true; } catch (_) { return false; }
+  }
+  $('keep-token').addEventListener('click', () => {
+    const list = savedTokens();
+    const tok = $('token').textContent;
+    if (!list.includes(tok)) list.push(tok);
+    $('keep-token').textContent = writeTokens(list) ? 'kept in this browser' : 'this browser will not store it';
+    $('keep-token').disabled = true;
+  });
+
+  $('again').addEventListener('click', () => {
+    $('result').hidden = true;
+    $('form').hidden = false;
+    $('token').textContent = '';
+    msg.focus();
+  });
+
+  // ---- erase my trace -----------------------------------------------------
+  const dialog = $('erase');
+  $('open-erase').addEventListener('click', () => {
+    $('erase-status').textContent = '';
+    $('erase-result').hidden = true;
+    renderSaved();
+    dialog.showModal();
+    $('erase-token').focus();
+  });
+
+  function renderSaved() {
+    const box = $('saved-tokens');
+    box.textContent = '';
+    const list = savedTokens();
+    if (!list.length) return;
+    box.append('kept in this browser: ');
+    list.forEach((tok, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ghost-btn';
+      b.textContent = `trace ${i + 1}`;
+      b.addEventListener('click', () => { $('erase-token').value = tok; });
+      box.append(b);
+    });
+  }
+
+  $('erase-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = $('erase-token').value.trim();
+    if (!token) return;
+    $('erase-status').textContent = 'erasing…';
+    try {
+      const r = await fetch('/api/erase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      const data = await r.json();
+      if (!data.ok) { $('erase-status').textContent = data.error; return; }
+      writeTokens(savedTokens().filter((t) => t !== token));
+      renderSaved();
+      $('erase-status').textContent = 'Your trace is gone. The memory has rebuilt itself without it.';
+      $('erase-token').value = '';
+      renderDiff(data.before, data.memory.text);
+      $('erase-result').hidden = false;
+      show(data.memory);
+    } catch (_) {
+      $('erase-status').textContent = 'Could not reach the memory. Try again.';
+    }
+  });
+
+  // Show before/after, striking through words that are no longer present.
+  function renderDiff(before, after) {
+    const afterCounts = {};
+    const key = (w) => w.toLowerCase().replace(/[.,]/g, '');
+    after.split(' ').forEach((w) => { afterCounts[key(w)] = (afterCounts[key(w)] || 0) + 1; });
+    const b = $('erase-before');
+    b.textContent = '';
+    before.split(' ').forEach((w, i) => {
+      if (i) b.append(' ');
+      if (afterCounts[key(w)]) { afterCounts[key(w)]--; b.append(w); }
+      else { const d = document.createElement('del'); d.textContent = w; b.append(d); }
+    });
+    $('erase-after').textContent = after;
+  }
+})();
+
+
+document.getElementById('proto-reset').addEventListener('click', () => { window.__reset(); location.hash = ''; window.dispatchEvent(new Event('focus')); refreshMemory(); });
+document.getElementById('proto-seed').addEventListener('click', async () => { window.__reset(); await window.__seed(); refreshMemory(); });
+for (const id of ['open-privacy', 'open-privacy-2']) document.getElementById(id).addEventListener('click', () => document.getElementById('privacy').showModal());
+async function refreshMemory() {
+  const r = await fetch('/api/memory');
+  const d = await r.json();
+  document.getElementById('plain').textContent = d.text;
+  document.getElementById('count').textContent = d.contributions + (d.contributions === 1 ? ' contribution' : ' contributions') + ' · reconstructed, not preserved';
+  if (window.MemoryView) window.MemoryView.set(d.words);
+}
+
+});
+</script>
+</body>
+</html>
